@@ -120,25 +120,25 @@ interactive_config() {
     echo "=========================================="
     echo "选择传输协议:"
     echo "=========================================="
-    echo "1) TCP"
-    echo "   - 优点: 连接稳定,适合有防火墙限制的网络"
+    echo "1) TCP (推荐)"
+    echo "   - 优点: 连接稳定,穿透性强,适合有防火墙限制的网络"
     echo "   - 缺点: 性能略低于UDP"
-    echo "   - 推荐: 企业网络、云服务器"
+    echo "   - 推荐: 云服务器、受限网络环境"
     echo ""
-    echo "2) UDP (推荐)"
+    echo "2) UDP"
     echo "   - 优点: 性能最佳,OpenVPN标准协议"
-    echo "   - 缺点: 可能被部分防火墙拦截"
-    echo "   - 推荐: 家庭网络、VPS服务器"
+    echo "   - 缺点: 容易被防火墙拦截(QoS/丢包)"
+    echo "   - 推荐: 家庭网络、无限制网络"
     echo ""
-    read -p "请选择协议类型 (1=TCP, 2=UDP) [2]: " PROTO_CHOICE
-    PROTO_CHOICE=${PROTO_CHOICE:-2}
+    read -p "请选择协议类型 (1=TCP, 2=UDP) [1]: " PROTO_CHOICE
+    PROTO_CHOICE=${PROTO_CHOICE:-1}
     
-    if [ "$PROTO_CHOICE" = "1" ]; then
-        SERVER_PROTO="tcp"
-        log_info "已选择: TCP协议"
-    else
+    if [ "$PROTO_CHOICE" = "2" ]; then
         SERVER_PROTO="udp"
-        log_info "已选择: UDP协议 (推荐)"
+        log_info "已选择: UDP协议"
+    else
+        SERVER_PROTO="tcp"
+        log_info "已选择: TCP协议 (推荐)"
     fi
     
     # 显示配置摘要
@@ -369,17 +369,17 @@ EOF
         echo "tcp-nodelay" >> $client_config
     fi
     
-    cat >> $client_config << 'EOF'
-<ca>
-$(cat /etc/openvpn/ca.crt)
-</ca>
-<cert>
-$(cat /etc/openvpn/easy-rsa/pki/issued/client1.crt)
-</cert>
-<key>
-$(cat /etc/openvpn/easy-rsa/pki/private/client1.key)
-</key>
-EOF
+    echo "<ca>" >> $client_config
+    cat /etc/openvpn/ca.crt >> $client_config
+    echo "</ca>" >> $client_config
+    
+    echo "<cert>" >> $client_config
+    cat /etc/openvpn/easy-rsa/pki/issued/client1.crt >> $client_config
+    echo "</cert>" >> $client_config
+    
+    echo "<key>" >> $client_config
+    cat /etc/openvpn/easy-rsa/pki/private/client1.key >> $client_config
+    echo "</key>" >> $client_config
     
     log_info "客户端配置文件已生成: $client_config"
 }
